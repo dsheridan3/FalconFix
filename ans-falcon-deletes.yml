@@ -1,0 +1,30 @@
+---
+- name: "FIX CROWDSTRIKE BAD UPdates"
+  hosts: windows
+  gather_facts: yes
+
+  vars:
+    target_folder: 'X:\Windows\System32\drivers\CrowdStrike'
+    file_patterns:
+      - 'C-00000291*32.sys'
+
+  tasks:
+    - name: Ensure target folder exists
+      win_file:
+        path: "{{ target_folder }}"
+        state: directory
+
+    - name: Find files in the target folder
+      win_find:
+        paths: "{{ target_folder }}"
+        patterns: "{{ file_patterns }}"
+      register: files_to_delete
+
+    - name: Delete found files
+      win_file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ files_to_delete.files }}"
+      when: files_to_delete.files | length > 0
+
+
